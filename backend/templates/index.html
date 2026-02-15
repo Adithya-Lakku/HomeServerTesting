@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inventory Management System</title>
+    <meta name="description" content="A simple inventory management system to add and view stock items." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+        /* ── Reset & Tokens ──────────────────────────────────── */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --border: #2a2d3a;
+            --text: #e4e6ed;
+            --muted: #8b8fa3;
+            --accent: #6c5ce7;
+            --accent-hover: #7e70f0;
+            --success: #00cec9;
+            --danger: #ff6b6b;
+            --radius: 10px;
+            --shadow: 0 4px 24px rgba(0, 0, 0, .35);
+            --transition: .25s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── Header ──────────────────────────────────────────── */
+        header {
+            width: 100%;
+            padding: 2rem 1rem 1.5rem;
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent) 0%, #3d2f8f 100%);
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: rgba(255, 255, 255, .7);
+            margin-top: .35rem;
+            font-size: .9rem;
+        }
+
+        /* ── Main ────────────────────────────────────────────── */
+        main {
+            width: 100%;
+            max-width: 720px;
+            padding: 2rem 1rem 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* ── Cards ───────────────────────────────────────────── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.75rem;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .card h2 .icon {
+            font-size: 1.25rem;
+        }
+
+        /* ── Form ────────────────────────────────────────────── */
+        .form-row {
+            display: flex;
+            gap: .75rem;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: .35rem;
+            flex: 1 1 200px;
+        }
+
+        label {
+            font-size: .8rem;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: .65rem .85rem;
+            color: var(--text);
+            font-size: .95rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color var(--transition);
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        /* ── Buttons ─────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: .65rem 1.4rem;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition), transform var(--transition);
+        }
+
+        .btn:active {
+            transform: scale(.97);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            margin-top: 1rem;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: rgba(108, 92, 231, .15);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(108, 92, 231, .25);
+        }
+
+        /* ── Status message ──────────────────────────────────── */
+        #status-msg {
+            margin-top: .75rem;
+            font-size: .85rem;
+            min-height: 1.2em;
+            transition: color var(--transition);
+        }
+
+        .msg-success {
+            color: var(--success);
+        }
+
+        .msg-error {
+            color: var(--danger);
+        }
+
+        /* ── Table ───────────────────────────────────────────── */
+        .table-wrap {
+            margin-top: 1.25rem;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: .6rem .85rem;
+            font-size: .9rem;
+        }
+
+        th {
+            background: var(--bg);
+            color: var(--muted);
+            font-weight: 600;
+            font-size: .8rem;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+
+        td {
+            border-top: 1px solid var(--border);
+        }
+
+        tr:hover td {
+            background: rgba(108, 92, 231, .06);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--muted);
+            padding: 2rem 0;
+            font-size: .9rem;
+        }
+
+        /* ── Responsive ──────────────────────────────────────── */
+        @media (max-width: 500px) {
+            .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>📦 Inventory Management</h1>
+        <p>Add items and generate stock reports</p>
+    </header>
+
+    <main>
+        <!-- ── Add Item Card ──────────────────────────────── -->
+        <section class="card" id="add-section">
+            <h2><span class="icon">➕</span> Add Item</h2>
+            <form id="add-form" autocomplete="off">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="item-name">Item Name</label>
+                        <input type="text" id="item-name" placeholder="e.g. Widget" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="item-qty">Quantity</label>
+                        <input type="number" id="item-qty" placeholder="e.g. 25" min="1" required />
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="submit-btn">Submit</button>
+            </form>
+            <p id="status-msg"></p>
+        </section>
+
+        <!-- ── Report Card ────────────────────────────────── -->
+        <section class="card" id="report-section">
+            <h2><span class="icon">📊</span> Inventory Report</h2>
+            <button class="btn btn-secondary" id="report-btn">Get Report</button>
+            <div class="table-wrap" id="report-output">
+                <p class="empty-state">Click the button above to load the report.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const addForm = document.getElementById('add-form');
+        const statusMsg = document.getElementById('status-msg');
+        const reportBtn = document.getElementById('report-btn');
+        const reportOut = document.getElementById('report-output');
+
+        /* ── Add Item ─────────────────────────────────────── */
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const item = document.getElementById('item-name').value.trim();
+            const quantity = parseInt(document.getElementById('item-qty').value, 10);
+
+            if (!item || isNaN(quantity)) {
+                showStatus('Please fill in both fields.', false);
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item, quantity })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.status === 'success') {
+                    showStatus(`"${item}" (×${quantity}) added successfully!`, true);
+                    addForm.reset();
+                } else {
+                    showStatus(data.message || 'Something went wrong.', false);
+                }
+            } catch (err) {
+                showStatus('Network error — is the server running?', false);
+            }
+        });
+
+        /* ── Report ───────────────────────────────────────── */
+        reportBtn.addEventListener('click', async () => {
+            reportBtn.disabled = true;
+            reportBtn.textContent = 'Loading…';
+
+            try {
+                const res = await fetch('/api/report');
+                const items = await res.json();
+
+                if (!items.length) {
+                    reportOut.innerHTML = '<p class="empty-state">No items in inventory yet.</p>';
+                    return;
+                }
+
+                let html = `<table>
+                <thead><tr><th>#</th><th>Item Name</th><th>Quantity</th></tr></thead>
+                <tbody>`;
+                items.forEach(i => {
+                    html += `<tr><td>${i.id}</td><td>${i.item_name}</td><td>${i.quantity}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                reportOut.innerHTML = html;
+            } catch (err) {
+                reportOut.innerHTML = '<p class="empty-state" style="color:var(--danger)">Failed to load report.</p>';
+            } finally {
+                reportBtn.disabled = false;
+                reportBtn.textContent = 'Get Report';
+            }
+        });
+
+        /* ── Helpers ──────────────────────────────────────── */
+        function showStatus(msg, ok) {
+            statusMsg.textContent = msg;
+            statusMsg.className = ok ? 'msg-success' : 'msg-error';
+            setTimeout(() => { statusMsg.textContent = ''; }, 4000);
+        }
+    </script>
+
+</body>
+
+</html>

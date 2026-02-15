@@ -1,0 +1,57 @@
+version: "3.8"
+
+services:
+  # ── PostgreSQL Database ────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_DB: inventory_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - inventory_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d inventory_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── Flask Backend ──────────────────────────────────────
+  flask_app:
+    build: ./backend
+    restart: unless-stopped
+    volumes:
+      - ./backend:/app
+    command: gunicorn -w 4 -b 0.0.0.0:8000 --reload app:app # - run the app as volume.
+    environment:
+      DB_HOST: db
+      POSTGRES_DB: inventory_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - inventory_net
+
+  # ── Nginx Reverse Proxy ────────────────────────────────
+  nginx:
+    build: ./nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - flask_app
+    networks:
+      - inventory_net
+
+volumes:
+  pgdata:
+
+networks:
+  inventory_net:
+    driver: bridge
