@@ -231,6 +231,40 @@
             font-size: .9rem;
         }
 
+        .btn-remove {
+            background: rgba(255, 107, 107, .12);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+            padding: .3rem .75rem;
+            border-radius: 6px;
+            font-size: .78rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .btn-remove:hover {
+            background: rgba(255, 107, 107, .25);
+        }
+
+        .btn-delete {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            padding: .3rem .75rem;
+            border-radius: 6px;
+            font-size: .78rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .btn-delete:hover {
+            background: #e05555;
+        }
+
         /* ── Responsive ──────────────────────────────────────── */
         @media (max-width: 500px) {
             .form-row {
@@ -313,6 +347,8 @@
             }
         });
 
+
+
         /* ── Report ───────────────────────────────────────── */
         reportBtn.addEventListener('click', async () => {
             reportBtn.disabled = true;
@@ -328,10 +364,10 @@
                 }
 
                 let html = `<table>
-                <thead><tr><th>#</th><th>Item Name</th><th>Quantity</th></tr></thead>
+                <thead><tr><th>#</th><th>Item Name</th><th>Quantity</th><th>Action</th></tr></thead>
                 <tbody>`;
                 items.forEach(i => {
-                    html += `<tr><td>${i.id}</td><td>${i.item_name}</td><td>${i.quantity}</td></tr>`;
+                    html += `<tr><td>${i.id}</td><td>${i.item_name}</td><td>${i.quantity}</td><td><button class="btn-remove" onclick="removeItem(${i.id})">− Remove</button> <button class="btn-delete" onclick="deleteItem(${i.id})">✕ Delete</button></td></tr>`;
                 });
                 html += '</tbody></table>';
                 reportOut.innerHTML = html;
@@ -342,6 +378,40 @@
                 reportBtn.textContent = 'Get Report';
             }
         });
+
+        /* ── Remove Item (−1 qty) ─────────────────────────── */
+        async function removeItem(id) {
+            try {
+                const res = await fetch('/api/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    reportBtn.click();
+                }
+            } catch (err) {
+                showStatus('Failed to remove item.', false);
+            }
+        }
+
+        /* ── Delete Item (full) ───────────────────────────── */
+        async function deleteItem(id) {
+            try {
+                const res = await fetch('/api/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json();
+                if (res.ok && data.status === 'success') {
+                    reportBtn.click();
+                }
+            } catch (err) {
+                showStatus('Failed to delete item.', false);
+            }
+        }
 
         /* ── Helpers ──────────────────────────────────────── */
         function showStatus(msg, ok) {

@@ -64,6 +64,46 @@ def add_item():
 
     return jsonify({"status": "success"})
 
+@app.route("/api/remove", methods=["POST"])
+def remove_item():
+    data = request.get_json()
+    item_id = data.get("id")
+
+    if not item_id:
+        return jsonify({"status": "error", "message": "Missing item ID"}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Decrement quantity by 1
+    cur.execute("UPDATE inventory SET quantity = quantity - 1 WHERE id = %s", (item_id,))
+    # Delete the row if quantity reached 0
+    cur.execute("DELETE FROM inventory WHERE id = %s AND quantity <= 0", (item_id,))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"status": "success"})
+
+
+@app.route("/api/delete", methods=["POST"])
+def delete_item():
+    data = request.get_json()
+    item_id = data.get("id")
+
+    if not item_id:
+        return jsonify({"status": "error", "message": "Missing item ID"}), 400
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM inventory WHERE id = %s", (item_id,))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+    return jsonify({"status": "success"})
+
 
 @app.route("/api/report", methods=["GET"])
 def report():
